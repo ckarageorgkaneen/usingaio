@@ -1,0 +1,89 @@
+<!-- Example B-3. charts.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Server Performance</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/smoothie/1.34.0/smoothie.min.js"></script>
+<script type="text/javascript">
+function createTimeline() {
+// cpu and mem are each a mapping of a color to a TimeSeries() instance.
+var cpu = {};
+var mem = {};
+var chart_props = {
+responsive: true,
+enableDpiScaling: false,
+millisPerPixel:100,
+grid: {
+millisPerLine: 4000,
+fillStyle: '#ffffff',
+strokeStyle: 'rgba(0,0,0,0.08)',
+verticalSections: 10
+},
+labels:{fillStyle:'#000000',fontSize:18},
+timestampFormatter:SmoothieChart.timeFormatter,
+maxValue: 100,
+minValue: 0
+};
+// One chart instance is created for CPU, and one for memory usage.
+var cpu_chart = new SmoothieChart(chart_props);
+var mem_chart = new SmoothieChart(chart_props);
+/* We create a TimeSeries() instance inside the onmessage event of the
+EventSource() instance. This means that any new data coming in (e.g., on a dif‐
+ferent color name) will automatically get a new time series created for it. The
+add_timeseries() function creates the TimeSeries() instance and adds to the
+given chart instance. */
+function add_timeseries(obj, chart, color) {
+obj[color] = new TimeSeries();
+chart.addTimeSeries(obj[color], {
+strokeStyle: color,
+lineWidth: 4
+})
+}
+/* Create a new EventSource() instance on the /feed URL. The browser will con‐
+nect to this endpoint on our server, (metric_server.py). Note that the browser will
+automatically try to reconnect if the connection is lost. Server-sent events are
+often overlooked, but in many situations their simplicity makes them preferable
+to WebSockets. */
+var evtSource = new EventSource("/feed");
+evtSource.onmessage = function(e) {
+/* The onmessage event will fire every time the server sends data. Here the data is
+parsed as JSON. */ 
+var obj = JSON.parse(e.data);
+if (!(obj.color in cpu)) {
+add_timeseries(cpu, cpu_chart, obj.color);
+}
+if (!(obj.color in mem)) {
+add_timeseries(mem, mem_chart, obj.color);
+}
+/* Recall that the cpu identifier is a mapping of a color to a TimeSeries() instance.
+Here, we obtain that time series and append data to it. We also obtain the time‐
+stamp and parse it to get the correct format required by the chart. */
+cpu[obj.color].append(
+Date.parse(obj.timestamp), obj.cpu);
+mem[obj.color].append(
+Date.parse(obj.timestamp), obj.mem);
+};
+cpu_chart.streamTo(
+document.getElementById("cpu_chart"), 1000
+);
+mem_chart.streamTo(
+document.getElementById("mem_chart"), 1000
+);
+}
+</script>
+<style>
+h1 {
+text-align: center;
+font-family: sans-serif;
+}
+</style>
+</head>
+<body onload="createTimeline()">
+<h1>CPU (%)</h1>
+<canvas id="cpu_chart" style="width:100%; height:300px">
+</canvas>
+<hr>
+<h1>Memory usage (MB)</h1>
+<canvas id="mem_chart" style="width:100%; height:300px">
+</canvas>

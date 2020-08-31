@@ -1,0 +1,13 @@
+aiohttp==3.6.2
+aiohttp-sse==2.0.0
+asyncpg==0.21.0
+attrs==20.1.0
+boltons==20.2.1
+bs4==0.0.1
+janus==0.5.0
+lxml==4.5.2
+psutil==5.7.2
+pyzmq==19.0.2
+sanic==20.6.3
+twisted==20.3.0
+zmq==0.0.0

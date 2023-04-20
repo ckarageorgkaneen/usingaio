@@ -2,7 +2,7 @@ aiohttp==3.6.2
 aiohttp-sse==2.0.0
 asyncpg==0.21.0
 attrs==20.1.0
-boltons==20.2.1
+boltons>=19.0.0,<=21.0.0
 bs4==0.0.1
 janus==0.5.0
 lxml==4.5.2
